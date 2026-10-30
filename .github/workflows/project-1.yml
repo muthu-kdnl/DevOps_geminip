@@ -40,7 +40,7 @@ jobs:
         proxy_host: ${{ secrets.BASTION_IP }}
         proxy_username: ubuntu
         proxy_key: ${{ secrets.SSH_KEY }}
-        source: "target/dptweb-1.0.war"
+        source: "target/*.war"
         target: "/home/ubuntu/"
 
     - name: Restart Tomcat
@@ -53,8 +53,7 @@ jobs:
         proxy_username: ubuntu
         proxy_key: ${{ secrets.SSH_KEY }}
         script: |
-          cp /home/ubuntu/target/dptweb-1.0.war /home/ubuntu/tomcat9/webapps/dptweb.war
+          cp /home/ubuntu/target/*.war /home/ubuntu/tomcat9/webapps/dptweb.war
           /home/ubuntu/tomcat9/bin/shutdown.sh
           sleep 5
           /home/ubuntu/tomcat9/bin/startup.sh
-      

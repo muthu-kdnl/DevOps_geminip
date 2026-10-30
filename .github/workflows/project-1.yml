@@ -24,4 +24,10 @@ jobs:
     - name: Build with Maven
       # Optional: switch to the project directory before building if needed
       run: cd DevOps-Project-01/Java-Login-App && mvn clean package
+
+    - name: Save the Artifact (WAR file)
+      uses: actions/upload-artifact@v4
+      with:
+        name: dptweb-app
+        path: DevOps-Project-01/Java-Login-App/target/dptweb-1.0.war
       

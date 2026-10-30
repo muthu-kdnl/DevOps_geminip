@@ -31,29 +31,28 @@ jobs:
         name: dptweb-app
         path: DevOps-Project-01/Java-Login-App/target/dptweb-1.0.war
 
-    - name: Copy WAR to Tomcat via Bastion Host
-      uses: appleboy/scp-action@master
-      with:
-        host: ${{ secrets.TOMCAT_IP }}
-        username: ubuntu
-        key: ${{ secrets.SSH_KEY }}
-        proxy_host: ${{ secrets.BASTION_IP }}
-        proxy_username: ubuntu
-        proxy_key: ${{ secrets.SSH_KEY }}
-        source: "target/*.war"
-        target: "/home/ubuntu/"
-
-    - name: Restart Tomcat
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.TOMCAT_IP }}
-        username: ubuntu
-        key: ${{ secrets.SSH_KEY }}
-        proxy_host: ${{ secrets.BASTION_IP }}
-        proxy_username: ubuntu
-        proxy_key: ${{ secrets.SSH_KEY }}
-        script: |
-          cp /home/ubuntu/target/*.war /home/ubuntu/tomcat9/webapps/dptweb.war
-          /home/ubuntu/tomcat9/bin/shutdown.sh
-          sleep 5
-          /home/ubuntu/tomcat9/bin/startup.sh
+    - name: Native SSH Deploy to Tomcat
+      run: |
+        # 1. Securely store the SSH key
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        
+        # 2. Configure the Bastion Jump Host
+        cat << 'EOF' > ~/.ssh/config
+        Host bastion
+          HostName ${{ secrets.BASTION_IP }}
+          User ubuntu
+          StrictHostKeyChecking no
+        
+        Host appserver
+          HostName ${{ secrets.TOMCAT_IP }}
+          User ubuntu
+          ProxyJump bastion
+          StrictHostKeyChecking no
+        EOF
+        chmod 600 ~/.ssh/config
+        
+        # 3. Transfer and Deploy
+        scp target/dptweb-1.0.war appserver:/home/ubuntu/dptweb.war
+        ssh appserver "cp /home/ubuntu/dptweb.war /home/ubuntu/tomcat9/webapps/dptweb.war && /home/ubuntu/tomcat9/bin/shutdown.sh && sleep 5 && /home/ubuntu/tomcat9/bin/startup.sh"

@@ -30,4 +30,31 @@ jobs:
       with:
         name: dptweb-app
         path: DevOps-Project-01/Java-Login-App/target/dptweb-1.0.war
+
+    - name: Copy WAR to Tomcat via Bastion Host
+      uses: appleboy/scp-action@master
+      with:
+        host: ${{ secrets.TOMCAT_IP }}
+        username: ubuntu
+        key: ${{ secrets.SSH_KEY }}
+        proxy_host: ${{ secrets.BASTION_IP }}
+        proxy_username: ubuntu
+        proxy_key: ${{ secrets.SSH_KEY }}
+        source: "target/dptweb-1.0.war"
+        target: "/home/ubuntu/"
+
+    - name: Restart Tomcat
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.TOMCAT_IP }}
+        username: ubuntu
+        key: ${{ secrets.SSH_KEY }}
+        proxy_host: ${{ secrets.BASTION_IP }}
+        proxy_username: ubuntu
+        proxy_key: ${{ secrets.SSH_KEY }}
+        script: |
+          cp /home/ubuntu/target/dptweb-1.0.war /home/ubuntu/tomcat9/webapps/dptweb.war
+          /home/ubuntu/tomcat9/bin/shutdown.sh
+          sleep 5
+          /home/ubuntu/tomcat9/bin/startup.sh
       

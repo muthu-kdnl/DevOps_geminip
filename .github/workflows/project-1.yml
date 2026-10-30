@@ -54,5 +54,5 @@ jobs:
         chmod 600 ~/.ssh/config
         
         # 3. Transfer and Deploy
-        scp target/dptweb-1.0.war appserver:/home/ubuntu/dptweb.war
+        scp DevOps-Project-01/Java-Login-App/target/dptweb-1.0.war appserver:/home/ubuntu/dptweb.war
         ssh appserver "cp /home/ubuntu/dptweb.war /home/ubuntu/tomcat9/webapps/dptweb.war && /home/ubuntu/tomcat9/bin/shutdown.sh && sleep 5 && /home/ubuntu/tomcat9/bin/startup.sh"

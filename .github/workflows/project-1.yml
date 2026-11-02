@@ -55,4 +55,4 @@ jobs:
         
         # 3. Transfer and Deploy
         scp DevOps-Project-01/Java-Login-App/target/dptweb-1.0.war appserver:/home/ubuntu/dptweb.war
-        ssh appserver "cp /home/ubuntu/dptweb.war /home/ubuntu/tomcat9/webapps/dptweb.war && /home/ubuntu/tomcat9/bin/shutdown.sh && sleep 5 && /home/ubuntu/tomcat9/bin/startup.sh"
+        ssh appserver "/home/ubuntu/tomcat9/bin/shutdown.sh && sleep 5 && rm -rf /home/ubuntu/tomcat9/webapps/dptweb && cp /home/ubuntu/dptweb.war /home/ubuntu/tomcat9/webapps/dptweb.war && /home/ubuntu/tomcat9/bin/startup.sh"

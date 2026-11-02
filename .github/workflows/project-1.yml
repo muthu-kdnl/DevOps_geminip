@@ -11,48 +11,50 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Source Code
-      uses: actions/checkout@v4
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
 
-    - name: Set up Java 21
-      uses: actions/setup-java@v4
-      with:
-        java-version: '21'
-        distribution: 'temurin'
-        cache: maven
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
 
-    - name: Build with Maven
-      # Optional: switch to the project directory before building if needed
-      run: cd DevOps-Project-01/Java-Login-App && mvn clean package
+      - name: Build with Maven
+        run: cd DevOps-Project-01/Java-Login-App && mvn clean package
 
-    - name: Save the Artifact (WAR file)
-      uses: actions/upload-artifact@v4
-      with:
-        name: dptweb-app
-        path: DevOps-Project-01/Java-Login-App/target/dptweb-1.0.war
+      - name: Force Remove Duplicate Jasper EL
+        run: zip -d DevOps-Project-01/Java-Login-App/target/dptweb-1.0.war WEB-INF/lib/tomcat-jasper-el-*.jar || true
 
-    - name: Native SSH Deploy to Tomcat
-      run: |
-        # 1. Securely store the SSH key
-        mkdir -p ~/.ssh
-        echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        
-        # 2. Configure the Bastion Jump Host
-        cat << 'EOF' > ~/.ssh/config
-        Host bastion
-          HostName ${{ secrets.BASTION_IP }}
-          User ubuntu
-          StrictHostKeyChecking no
-        
-        Host appserver
-          HostName ${{ secrets.TOMCAT_IP }}
-          User ubuntu
-          ProxyJump bastion
-          StrictHostKeyChecking no
-        EOF
-        chmod 600 ~/.ssh/config
-        
-        # 3. Transfer and Deploy
-        scp DevOps-Project-01/Java-Login-App/target/dptweb-1.0.war appserver:/home/ubuntu/dptweb.war
-        ssh appserver "/home/ubuntu/tomcat9/bin/shutdown.sh && sleep 5 && rm -rf /home/ubuntu/tomcat9/webapps/dptweb && cp /home/ubuntu/dptweb.war /home/ubuntu/tomcat9/webapps/dptweb.war && /home/ubuntu/tomcat9/bin/startup.sh"
+      - name: Save the Artifact (WAR file)
+        uses: actions/upload-artifact@v4
+        with:
+          name: dptweb-app
+          path: DevOps-Project-01/Java-Login-App/target/dptweb-1.0.war
+
+      - name: Native SSH Deploy to Tomcat
+        run: |
+          # 1. Securely store the SSH key
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          
+          # 2. Configure the Bastion Jump Host
+          cat << 'EOF' > ~/.ssh/config
+          Host bastion
+            HostName ${{ secrets.BASTION_IP }}
+            User ubuntu
+            StrictHostKeyChecking no
+          
+          Host appserver
+            HostName ${{ secrets.TOMCAT_IP }}
+            User ubuntu
+            ProxyJump bastion
+            StrictHostKeyChecking no
+          EOF
+          chmod 600 ~/.ssh/config
+          
+          # 3. Transfer and Deploy
+          scp DevOps-Project-01/Java-Login-App/target/dptweb-1.0.war appserver:/home/ubuntu/dptweb.war
+          ssh appserver "/home/ubuntu/tomcat9/bin/shutdown.sh && sleep 5 && rm -rf /home/ubuntu/tomcat9/webapps/dptweb && cp /home/ubuntu/dptweb.war /home/ubuntu/tomcat9/webapps/dptweb.war && /home/ubuntu/tomcat9/bin/startup.sh"
